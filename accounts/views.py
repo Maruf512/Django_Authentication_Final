@@ -3,12 +3,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Account
 from django.contrib.auth.hashers import check_password
-from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
+from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import AccountSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
-from datetime import timedelta
-from django.conf import settings
 
 
 
@@ -75,6 +73,7 @@ class RegisterView(APIView):
 
 
 class CookieTokenRefreshView(APIView):
+    authentication_classes = []
     def post(self, request):
         refresh_token = request.COOKIES.get('refresh')
 
@@ -89,11 +88,7 @@ class CookieTokenRefreshView(APIView):
                 return Response({'error': 'Invalid token payload'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
-            access = AccessToken()
-            access['user_id'] = user_id
-            access.set_exp(
-                lifetime=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME']
-            )
+            access = refresh.access_token
 
             response = Response({'access': str(access)})
             response.set_cookie(
